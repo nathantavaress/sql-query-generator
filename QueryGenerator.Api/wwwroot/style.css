@@ -1,101 +1,242 @@
+/* Importando uma fonte moderna do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #cbd5e1;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --danger: #fee2e2;
+    --danger-text: #b91c1c;
+    --danger-hover: #fecaca;
+    --radius: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --focus-ring: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    --transition: all 0.2s ease;
+}
+
 body {
-    font-family: system-ui, sans-serif;
-    background: #f3f5f8;
-    color: #1f2937;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
     margin: 0;
+    line-height: 1.6;
 }
 
 main {
     max-width: 900px;
     margin: 0 auto;
-    padding: 24px 16px 60px;
+    padding: 40px 20px 80px;
 }
 
 h1 {
-    margin-bottom: 4px;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-main);
+    letter-spacing: -0.025em;
 }
 
 .sub {
-    color: #6b7280;
+    color: var(--text-muted);
+    font-size: 1.1rem;
     margin-top: 0;
+    margin-bottom: 32px;
 }
 
 section {
-    background: #fff;
-    border-radius: 8px;
-    padding: 16px;
-    margin: 14px 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: var(--shadow-md);
+    border: 1px solid #f1f5f9;
 }
 
 h2 {
-    font-size: 1rem;
-    margin: 0 0 10px;
-    color: #1e3a8a;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 16px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
 }
 
+/* Estilo para Inputs e Selects */
 select,
 input:not([type]) {
-    padding: 6px 8px;
-    border: 1px solid #cbd5e1;
-    border-radius: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: #fff;
+    outline: none;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+select:focus,
+input:not([type]):focus {
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+}
+
+select {
+    cursor: pointer;
+}
+
+/* Checkboxes */
+label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    padding: 6px 4px;
+}
+
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 6px;
-    margin-top: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
 }
 
 .row {
     display: flex;
-    gap: 8px;
-    margin: 8px 0;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
     flex-wrap: wrap;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px dashed var(--border-color);
 }
 
+/* Botões Gerais */
 button {
-    padding: 8px 14px;
-    border: 0;
-    border-radius: 4px;
-    background: #e2e8f0;
+    padding: 10px 16px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--text-main);
     cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
 }
 
 button:hover {
-    background: #cbd5e1;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
+button:active {
+    transform: translateY(1px);
+}
+
+/* Botão Primário */
 .primary {
-    background: #1d4ed8;
+    background: var(--primary);
     color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
 }
 
 .primary:hover {
-    background: #1e40af;
+    background: var(--primary-hover);
+    box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.4);
 }
 
+/* Botão de Excluir (.x) */
 .x {
-    background: #fee2e2;
+    background: var(--danger);
+    color: var(--danger-text);
+    border: none;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+.x:hover {
+    background: var(--danger-hover);
 }
 
 .action {
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    margin-top: 32px;
 }
 
 #error {
-    color: #b91c1c;
-    margin: 10px 0;
-    font-weight: 600;
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+    margin: 16px 0;
+    font-weight: 500;
+    display: block;
+}
+
+#error:empty {
+    display: none;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+/* Área de Resultado SQL */
+#out {
+    background: #0f172a;
+    border: none;
+}
+
+#out h2 {
+    color: #38bdf8;
 }
 
 pre {
-    background: #0f172a;
+    background: #1e293b;
     color: #e2e8f0;
-    padding: 14px;
-    border-radius: 6px;
+    padding: 20px;
+    border-radius: 8px;
     overflow-x: auto;
-    margin: 0 0 10px;
+    margin: 0 0 16px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    border: 1px solid #334155;
+}
+
+#btnCopy {
+    background: #38bdf8;
+    color: #0f172a;
+    border: none;
+    font-weight: 600;
+}
+
+#btnCopy:hover {
+    background: #7dd3fc;
 }
