@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gerador de Queries SQL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main>
+        <h1>Gerador de Queries SQL</h1>
+        <p class="sub">Escolha uma tabela, monte a busca e receba a query SQL pronta para copiar.</p>
+
+        <section>
+            <h2>1. Tabela</h2>
+            <select id="table"></select>
+        </section>
+
+        <section>
+            <h2>2. Colunas que quer ver (SELECT)</h2>
+            <label><input type="checkbox" id="allCols" checked> Todas as colunas</label>
+            <div id="cols" class="grid"></div>
+        </section>
+
+        <section>
+            <h2>3. Condições da busca (WHERE)</h2>
+            <div>Combinar condições com:
+                <select id="logic">
+                    <option value="AND">E (todas precisam valer)</option>
+                    <option value="OR">OU (basta uma valer)</option>
+                </select>
+            </div>
+            <div id="filters"></div>
+            <button type="button" id="addFilter">+ Adicionar condição</button>
+        </section>
+
+        <section>
+            <h2>4. Ordenação (ORDER BY)</h2>
+            <div id="sorts"></div>
+            <button type="button" id="addSort">+ Adicionar ordenação</button>
+        </section>
+
+        <div class="action">
+            <button type="button" class="primary" id="btnGen">Gerar query</button>
+        </div>
+        <div id="error"></div>
+
+        <section id="out" hidden>
+            <h2>Query gerada</h2>
+            <pre id="sql"></pre>
+            <button type="button" id="btnCopy">Copiar query</button>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

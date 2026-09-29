@@ -44,43 +44,15 @@ app.MapGet("/api/tables/{table}/columns", IResult (string table) =>
     return Results.Ok(columns);
 });
 
-// Só gera a query (texto SQL) para o usuário copiar
+// Gera a query (texto SQL) para o usuário copiar
 app.MapPost("/api/query/generate", IResult (QueryRequest req) =>
 {
     using var conn = new SqliteConnection(connectionString);
     conn.Open();
     var built = QueryBuilder.Build(conn, req);
     return built.Error is null
-        ? Results.Ok(new { sql = built.DisplaySql })
+        ? Results.Ok(new { sql = built.Sql })
         : Results.BadRequest(new { error = built.Error });
-});
-
-// Gera e executa a query, devolvendo o resultado
-app.MapPost("/api/query/execute", IResult (QueryRequest req) =>
-{
-    using var conn = new SqliteConnection(connectionString);
-    conn.Open();
-
-    var limited = req with { Limit = Math.Clamp(req.Limit ?? 100, 1, 1000) };
-    var built = QueryBuilder.Build(conn, limited);
-    if (built.Error is not null) return Results.BadRequest(new { error = built.Error });
-
-    using var cmd = conn.CreateCommand();
-    cmd.CommandText = built.ExecSql;
-    foreach (var (name, value) in built.Params)
-        cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
-
-    using var reader = cmd.ExecuteReader();
-    var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
-    var rows = new List<object?[]>();
-    while (reader.Read())
-    {
-        var row = new object?[reader.FieldCount];
-        for (int i = 0; i < row.Length; i++)
-            row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
-        rows.Add(row);
-    }
-    return Results.Ok(new { sql = built.DisplaySql, columns, rows });
 });
 
 app.Run();
@@ -93,18 +65,25 @@ record QueryRequest(
     List<string>? Columns,
     List<FilterDto>? Filters,
     string? Logic,          // "AND" (padrão) ou "OR"
-    List<SortDto>? Sort,
-    int? Limit);
-record BuildResult(string? ExecSql, string? DisplaySql, Dictionary<string, object?> Params, string? Error);
+    List<SortDto>? Sort);
+record BuildResult(string? Sql, string? Error);
 
 // ---------- Gerador ----------
 static class QueryBuilder
 {
     static readonly Dictionary<string, string> Operators = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["="] = "=", ["<>"] = "<>", [">"] = ">", ["<"] = "<", [">="] = ">=", ["<="] = "<=",
-        ["LIKE"] = "LIKE", ["NOT LIKE"] = "NOT LIKE", ["CONTAINS"] = "LIKE",
-        ["IS NULL"] = "IS NULL", ["IS NOT NULL"] = "IS NOT NULL"
+        ["="] = "=",
+        ["<>"] = "<>",
+        [">"] = ">",
+        ["<"] = "<",
+        [">="] = ">=",
+        ["<="] = "<=",
+        ["LIKE"] = "LIKE",
+        ["NOT LIKE"] = "NOT LIKE",
+        ["CONTAINS"] = "LIKE",
+        ["IS NULL"] = "IS NULL",
+        ["IS NOT NULL"] = "IS NOT NULL"
     };
 
     public static BuildResult Build(SqliteConnection conn, QueryRequest req)
@@ -118,38 +97,33 @@ static class QueryBuilder
             foreach (var c in cols)
                 if (!schema.ContainsKey(c)) return Fail($"Coluna inválida: {c}");
         var select = cols is null ? "*" : string.Join(", ", cols.Select(Quote));
-        var head = $"SELECT {select}\nFROM {Quote(req.Table)}";
+        var sb = new StringBuilder($"SELECT {select}\nFROM {Quote(req.Table)}");
 
         // WHERE
-        var ps = new Dictionary<string, object?>();
-        var execConds = new List<string>();
-        var dispConds = new List<string>();
-        int i = 0;
-        foreach (var f in req.Filters ?? new List<FilterDto>())
+        var conditions = new List<string>();
+        foreach (var filter in req.Filters ?? new List<FilterDto>())
         {
-            if (!schema.TryGetValue(f.Column ?? "", out var type))
-                return Fail($"Coluna inválida no filtro: {f.Column}");
-            if (!Operators.TryGetValue((f.Op ?? "").Trim(), out var op))
-                return Fail($"Operador inválido: {f.Op}");
+            if (!schema.TryGetValue(filter.Column ?? "", out var type))
+                return Fail($"Coluna inválida no filtro: {filter.Column}");
+            if (!Operators.TryGetValue((filter.Op ?? "").Trim(), out var sqlOperator))
+                return Fail($"Operador inválido: {filter.Op}");
 
-            var col = Quote(f.Column!);
-            if (op.StartsWith("IS"))
+            var col = Quote(filter.Column!);
+            if (sqlOperator.StartsWith("IS"))
             {
-                execConds.Add($"{col} {op}");
-                dispConds.Add($"{col} {op}");
+                conditions.Add($"{col} {sqlOperator}");
                 continue;
             }
-            if (string.IsNullOrEmpty(f.Value))
-                return Fail($"Informe um valor para o filtro em {f.Column}.");
+            if (string.IsNullOrEmpty(filter.Value))
+                return Fail($"Informe um valor para o filtro em {filter.Column}.");
 
-            var value = f.Op!.Trim().Equals("CONTAINS", StringComparison.OrdinalIgnoreCase)
-                ? $"%{f.Value}%" : f.Value!;
-            var p = $"$p{i++}";
-            ps[p] = value;
-            execConds.Add($"{col} {op} {p}");
-            dispConds.Add($"{col} {op} {Literal(value, type)}");
+            var value = filter.Op!.Trim().Equals("CONTAINS", StringComparison.OrdinalIgnoreCase)
+                ? $"%{filter.Value}%" : filter.Value!;
+            conditions.Add($"{col} {sqlOperator} {Literal(value, type)}");
         }
         var logic = string.Equals(req.Logic, "OR", StringComparison.OrdinalIgnoreCase) ? " OR " : " AND ";
+        if (conditions.Count > 0)
+            sb.Append("\nWHERE ").Append(string.Join(logic, conditions));
 
         // ORDER BY
         var order = new List<string>();
@@ -159,20 +133,13 @@ static class QueryBuilder
             var dir = string.Equals(s.Direction, "DESC", StringComparison.OrdinalIgnoreCase) ? "DESC" : "ASC";
             order.Add($"{Quote(s.Column!)} {dir}");
         }
+        if (order.Count > 0)
+            sb.Append("\nORDER BY ").Append(string.Join(", ", order));
 
-        string Assemble(List<string> conds)
-        {
-            var sb = new StringBuilder(head);
-            if (conds.Count > 0) sb.Append("\nWHERE ").Append(string.Join(logic, conds));
-            if (order.Count > 0) sb.Append("\nORDER BY ").Append(string.Join(", ", order));
-            if (req.Limit is > 0) sb.Append("\nLIMIT ").Append(req.Limit);
-            return sb.Append(';').ToString();
-        }
-
-        return new BuildResult(Assemble(execConds), Assemble(dispConds), ps, null);
+        return new BuildResult(sb.Append(';').ToString(), null);
     }
 
-    static BuildResult Fail(string msg) => new(null, null, new(), msg);
+    static BuildResult Fail(string msg) => new(null, msg);
 
     // Nome -> tipo das colunas; null se a tabela não existir
     static Dictionary<string, string>? GetSchema(SqliteConnection conn, string table)
@@ -192,7 +159,7 @@ static class QueryBuilder
 
     static string Quote(string identifier) => "\"" + identifier.Replace("\"", "\"\"") + "\"";
 
-    // Só para exibição: número vira número, o resto vira texto entre aspas
+    // Número vira número, o resto vira texto entre aspas (aspas simples são dobradas)
     static string Literal(string value, string type)
     {
         var t = type.ToUpperInvariant();
