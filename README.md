@@ -16,6 +16,8 @@ O programa roda no seu computador e é acessado pelo navegador. Para abri-lo, vo
 4. Quando o programa iniciar, o terminal mostra uma linha parecida com `Now listening on: http://localhost:5013`. Abra no navegador o endereço que aparecer aí. O número da porta (no exemplo, 5013) pode ser diferente no seu computador.
 5. Para encerrar o programa, volte ao terminal e pressione `Ctrl + C`.
 
+![Tela inicial do programa](docs/tela-inicial.png)
+
 ## Como usar
 
  - Selecione qual tabela você deseja consultar;
@@ -28,6 +30,8 @@ Exemplo: O chefe de uma empresa quer saber o nome e sobrenome e a data de contra
 
 Primeiro ele deve selecionar a tabela "Employee", depois deve selecionar as colunas "FirstName", "LastName" e "HireDate", após isso deve criar duas condições de busca no WHERE, a primeira ele irá selecionar a coluna "City", depois marcar "igual a" e por fim colocar no campo valor "Porto Alegre", feito o primeiro filtro, ele deve clicar em "+ Adicionar condição" e repetir o processo, só que agora selecionando a coluna "Phone" e marcar a opção "é nulo" deixando o campo "valor" vazio. Por último ele deve clicar em "+ Adicionar ordenação" na seção "4. Ordenação (ORDER BY)" e selecionar a coluna "FirstName" e escolher a opção de ordenação "crescente (A -> Z, 0 -> 9)". Após ter selecionado todas as opções para montar a query, basta clicar em "Gerar query" para receber ela pronta.
 
+![Campos preenchidos conforme exemplo](docs/exemplo-preenchido.png)
+
 ```sql
 SELECT "LastName", "FirstName", "HireDate"
 FROM "Employee"
@@ -36,6 +40,8 @@ ORDER BY "FirstName" ASC;
 ```
 
 Para copiar a query, use o botão "Copiar query" que aparece logo abaixo dela.
+
+![Query gerada](docs/query-gerada.png)
 
 ## Como combinar condições
 
